@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 0 auto; margin-top: 4rem;">
+    <div class="card" style="padding: 2.5rem; border-top: 4px solid var(--accent-color);">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--accent-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1rem;">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h2 style="font-size: 1.8rem; color: var(--text-main);">Officer Access</h2>
+            <p style="color: var(--text-muted); margin-top: 0.5rem;">Secure login to manage road damage reports.</p>
+        </div>
+
+        <form id="officerLoginForm" onsubmit="handleOfficerLogin(event)">
+            <div class="form-group mb-4">
+                <label for="officerName" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-main);">Officer Name *</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-user" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                    <input type="text" id="officerName" class="form-control" required style="width: 100%; border-radius: 0.5rem; padding-left: 2.5rem;" placeholder="Officer John Doe">
+                </div>
+            </div>
+            
+            <div class="form-group mb-4">
+                <label for="officerEmail" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-main);">Official Email ID *</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-envelope" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                    <input type="email" id="officerEmail" class="form-control" required style="width: 100%; border-radius: 0.5rem; padding-left: 2.5rem;" placeholder="officer@city.gov">
+                </div>
+            </div>
+
+            <div class="form-group mb-6">
+                <label for="officerPhone" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-main);">Phone Number</label>
+                <div style="position: relative;">
+                    <i class="fa-solid fa-phone" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                    <input type="tel" id="officerPhone" class="form-control" style="width: 100%; border-radius: 0.5rem; padding-left: 2.5rem;" placeholder="(Optional)">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-outline" style="width: 100%; font-size: 1.1rem; padding: 1rem; background-color: var(--accent-light); color: var(--accent-color); border-color: var(--accent-color);">
+                Access Dashboard <i class="fa-solid fa-arrow-right-to-bracket" style="margin-left: 0.5rem;"></i>
+            </button>
+            
+            <p class="text-center mt-4 text-muted" style="font-size: 0.9rem;">
+                <i class="fa-solid fa-lock" style="margin-right: 4px;"></i> Secure Government Gateway
+            </p>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function handleOfficerLogin(event) {
+        event.preventDefault();
+        
+        const officerData = {
+            name: document.getElementById('officerName').value,
+            email: document.getElementById('officerEmail').value,
+            phone: document.getElementById('officerPhone').value
+        };
+        
+        localStorage.setItem('officerData', JSON.stringify(officerData));
+        window.location.href = '/admin'; // Officer Dashboard
+    }
+
+    // Auto-fill
+    window.onload = function() {
+        const stored = localStorage.getItem('officerData');
+        if (stored) {
+            const data = JSON.parse(stored);
+            document.getElementById('officerName').value = data.name || '';
+            document.getElementById('officerEmail').value = data.email || '';
+            document.getElementById('officerPhone').value = data.phone || '';
+        }
+    };
+</script>
+{% endblock %}

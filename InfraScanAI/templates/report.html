@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto; margin-top: 2rem;">
+    <h2 class="text-center" style="color: var(--primary-color);">Report Road Damage</h2>
+    <p class="text-center text-muted mb-8">Please provide details of the road damage. Our AI will analyze the image to determine the severity.</p>
+    
+    <form id="reportForm" onsubmit="submitReport(event)">
+        <!-- Hidden fields for the citizen data -->
+        <input type="hidden" id="name" name="name">
+        <input type="hidden" id="email" name="email">
+        <input type="hidden" id="phone" name="phone">
+
+        <div class="form-group mb-6">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-main);"><i class="fa-solid fa-camera" style="margin-right: 8px;"></i> Upload Road Damage Image *</label>
+            <div class="file-drop-area card" id="dropArea" style="border: 2px dashed var(--border-color); cursor: pointer; transition: all 0.2s; text-align: center; padding: 2rem;">
+                <i class="fa-solid fa-cloud-arrow-up" id="uploadIcon" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                <span id="uploadText" style="display: block; font-size: 1.1rem; color: var(--text-muted);">Drag & drop image here or click to browse</span>
+                <input type="file" id="imageInput" name="image" accept="image/jpeg, image/png, image/webp" required style="position: absolute; left: 0; top: 0; height: 100%; width: 100%; opacity: 0; cursor: pointer;">
+            </div>
+            <div id="previewContainer" style="text-align: center; margin-top: 1rem; display: none;">
+                <img id="imagePreview" class="image-preview" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 0.5rem; box-shadow: var(--shadow-sm);">
+                <button type="button" class="btn btn-outline mt-2" onclick="resetImage()">Change Image</button>
+            </div>
+        </div>
+
+        <div class="form-group mb-6">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-main);"><i class="fa-solid fa-location-dot" style="margin-right: 8px;"></i> Location Detection *</label>
+            <div style="display: flex; gap: 1rem; align-items: center; background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                <div style="flex-grow: 1;">
+                    <div id="locationText" style="font-weight: 500; margin-bottom: 0.25rem;">Location not detected</div>
+                    <small class="text-muted" id="coordsText">Click 'Detect Location' to capture GPS coordinates</small>
+                </div>
+                <input type="hidden" id="latitude" name="latitude">
+                <input type="hidden" id="longitude" name="longitude">
+                <button type="button" class="btn btn-outline" onclick="getLocation()" id="locationBtn" style="white-space: nowrap;">
+                    <i class="fa-solid fa-location-crosshairs"></i> Detect Location
+                </button>
+            </div>
+        </div>
+
+        <div class="form-group mb-8">
+            <label for="notes" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-main);"><i class="fa-solid fa-pen-to-square" style="margin-right: 8px;"></i> Additional Notes (Optional)</label>
+            <textarea id="notes" name="notes" class="form-control" rows="4" placeholder='Example: "Large pothole causing traffic issues"' style="width: 100%; border-radius: 0.5rem; resize: vertical;"></textarea>
+        </div>
+
+        <div class="text-center" id="submitActionBox">
+            <button type="submit" class="btn btn-primary" id="submitBtn" style="width: 100%; font-size: 1.25rem; padding: 1rem;">
+                Analyze & Report <i class="fa-solid fa-wand-magic-sparkles" style="margin-left: 8px;"></i>
+            </button>
+            <div id="loadingIndicator" class="mt-4" style="display: none;">
+                <div class="card" style="padding: 2rem; background: #f8fafc; border: 1px solid var(--primary-light);">
+                    <span class="loader" style="width: 48px; height: 48px; border-width: 4px; border-left-color: var(--primary-color);"></span>
+                    <h3 style="margin-top: 1rem; color: var(--primary-color);">AI Analyzing Image...</h3>
+                    <p class="text-muted mb-0">Please wait while we process the road damage severity.</p>
+                </div>
+            </div>
+            <div id="errorMsg" class="mt-4 card" style="color: var(--danger-color); display: none; background: #fef2f2; border-color: #fecaca; text-align: left;">
+                <i class="fa-solid fa-circle-exclamation" style="margin-right: 8px;"></i> <span id="errorText"></span>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

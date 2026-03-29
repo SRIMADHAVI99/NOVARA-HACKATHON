@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+        <h2 style="color: var(--text-main);">Admin Dashboard</h2>
+        <p class="text-muted" style="margin-top: 0.25rem;">Command center for road maintenance monitoring.</p>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <span class="badge badge-success" style="font-size: 1rem; padding: 0.5rem 1rem;"><i class="fa-solid fa-satellite-dish mr-2"></i> Live Data Feed</span>
+        <button onclick="logoutOfficer()" class="btn btn-outline" style="padding: 0.5rem 1rem;">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="card" style="text-align: center; padding: 1.5rem;">
+        <h3 class="text-muted" style="margin-bottom: 0.5rem; font-size: 1rem;">Total Reports</h3>
+        <div id="statTotal" style="font-size: 2.5rem; font-weight: 800; color: var(--text-main);">0</div>
+    </div>
+    <div class="card" style="text-align: center; padding: 1.5rem;">
+        <h3 class="text-muted" style="margin-bottom: 0.5rem; font-size: 1rem;">Pending Actions</h3>
+        <div id="statPending" style="font-size: 2.5rem; font-weight: 800; color: var(--warning-color);">0</div>
+    </div>
+    <div class="card" style="text-align: center; padding: 1.5rem;">
+        <h3 class="text-muted" style="margin-bottom: 0.5rem; font-size: 1rem;">Repaired</h3>
+        <div id="statRepaired" style="font-size: 2.5rem; font-weight: 800; color: var(--success-color);">0</div>
+    </div>
+    <div class="card" style="text-align: center; padding: 1.5rem;">
+        <h3 class="text-muted" style="margin-bottom: 0.5rem; font-size: 1rem;">High Severity</h3>
+        <div id="statHighSeverity" style="font-size: 2.5rem; font-weight: 800; color: var(--danger-color);">0</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+    <!-- Map Section -->
+    <div class="card" style="padding: 1rem;">
+        <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-map-location-dot" style="margin-right: 8px;"></i> Damage Hotspots</h3>
+        <div id="mapContainer" style="height: 300px; background: #e2e8f0; border-radius: 0.5rem; position: relative;">
+            <!-- Placeholder for map if API key not valid -->
+            <div id="map" style="width: 100%; height: 100%; border-radius: 0.5rem;"></div>
+            <div id="mapOverlay" style="position: absolute; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.8); z-index: 10; border-radius: 0.5rem; display: none;">
+                <p>Loading Maps...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Section -->
+    <div class="card" style="padding: 1rem;">
+        <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-chart-pie" style="margin-right: 8px;"></i> Damage Types</h3>
+        <div style="height: 300px; position: relative;">
+            <canvas id="damageChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Table Section -->
+<div class="card" style="box-shadow: var(--shadow-md);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="margin-bottom: 0; color: var(--text-main);"><i class="fa-solid fa-list-check" style="margin-right: 8px;"></i> Recent Reports</h3>
+        <button class="btn btn-outline" onclick="fetchReports()" style="padding: 0.5rem 1rem; border-color: var(--border-color); color: var(--text-main);">
+            <i class="fa-solid fa-rotate-right"></i> Refresh
+        </button>
+    </div>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border-color); background-color: #f8fafc;">
+                    <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">ID / Image</th>
+                    <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Reporter Info</th>
+                    <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Damage & Severity</th>
+                    <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">AI Notes</th>
+                    <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Status</th>
+                    <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="reportsTableBody">
+                <!-- Rows injected via JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Placeholder Google Maps API (In real world, provide valid key) -->
+<script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_MOCK_API_KEY&libraries=visualization"></script>
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

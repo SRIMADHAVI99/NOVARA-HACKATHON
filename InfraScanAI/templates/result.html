@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto; margin-top: 2rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2 style="color: var(--text-main); font-size: 2.25rem;">Damage Analysis Result</h2>
+        <p class="text-muted" style="font-size: 1.1rem;">Report ID: <strong>{{ report_id }}</strong></p>
+    </div>
+
+    <div id="resultContent" style="display: none;">
+        <!-- Image Preview -->
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <img id="resultImage" class="image-preview" style="max-height: 350px; border-radius: 0.75rem; box-shadow: var(--shadow-md); max-width: 100%; border: 4px solid var(--border-color);" alt="Reported Damage">
+        </div>
+
+        <!-- AI Analysis Details -->
+        <div style="background: #f8fafc; border: 1px solid var(--primary-light); border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -20px; right: -20px; font-size: 8rem; color: rgba(79, 70, 229, 0.05); z-index: 0;">
+                <i class="fa-solid fa-microchip"></i>
+            </div>
+            
+            <div style="position: relative; z-index: 1;">
+                <h3 style="color: var(--primary-color); margin-bottom: 1rem;"><i class="fa-solid fa-robot" style="margin-right: 8px;"></i> AI Insights</h3>
+                
+                <p id="aiExplanation" style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 1.5rem; line-height: 1.6;"></p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+                        <span class="text-muted"><i class="fa-solid fa-triangle-exclamation" style="margin-right: 5px;"></i> Damage Type</span>
+                        <strong id="resDamageType" style="font-size: 1.1rem;"></strong>
+                    </div>
+                    <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+                        <span class="text-muted"><i class="fa-solid fa-gauge-high" style="margin-right: 5px;"></i> Severity Level</span>
+                        <strong id="resSeverity" style="font-size: 1.1rem;"></strong>
+                    </div>
+                    <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+                        <span class="text-muted"><i class="fa-solid fa-chart-pie" style="margin-right: 5px;"></i> AI Confidence</span>
+                        <strong id="resConfidence" style="font-size: 1.1rem; color: var(--primary-color);"></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="/report" class="btn btn-outline" style="font-size: 1.1rem;">
+                <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Report Another Damage
+            </a>
+            <a href="/my_reports" class="btn btn-primary" style="font-size: 1.1rem;">
+                <i class="fa-solid fa-list-check" style="margin-right: 8px;"></i> View My Reports
+            </a>
+        </div>
+    </div>
+    
+    <div id="loadingState" style="text-align: center; padding: 4rem 2rem;">
+        <span class="loader" style="width: 48px; height: 48px; border-width: 4px; border-left-color: var(--primary-color);"></span>
+        <h3 style="margin-top: 1.5rem; color: var(--text-main);">Fetching Results...</h3>
+    </div>
+    
+    <div id="errorState" style="text-align: center; padding: 4rem 2rem; display: none;">
+        <div style="font-size: 4rem; color: var(--danger-color); margin-bottom: 1rem;"><i class="fa-solid fa-circle-xmark"></i></div>
+        <h3 style="margin-bottom: 1rem;">Report Not Found</h3>
+        <p class="text-muted mb-4">We couldn't find the details for this report.</p>
+        <a href="/report" class="btn btn-primary">Go to Reporting</a>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const reportId = "{{ report_id }}";
+        if(!reportId) return;
+
+        try {
+            const response = await fetch(`/api/track/${reportId}`);
+            if(!response.ok) throw new Error("Report not found");
+            
+            const data = await response.json();
+            
+            document.getElementById('resultImage').src = `/static/uploads/${data.image_path}`;
+            document.getElementById('resDamageType').textContent = data.damage_type;
+            
+            // Generate a natural language explanation
+            const damageMap = {
+                'Pothole': 'a pothole on the road surface that may cause vehicle damage and traffic hazards.',
+                'Crack': 'cracking on the road surface indicating structural wear and potential future degradation.',
+                'No Damage': 'no significant structural damage or hazards on this section of the road.'
+            };
+            const explanationBase = damageMap[data.damage_type] || 'unidentified road anomalies requiring further human inspection.';
+            document.getElementById('aiExplanation').innerHTML = `The uploaded image shows <strong>${explanationBase}</strong>`;
+
+            // Severity styling
+            const resSeverity = document.getElementById('resSeverity');
+            resSeverity.textContent = data.severity;
+            if (data.severity === 'High') resSeverity.style.color = 'var(--danger-color)';
+            else if (data.severity === 'Medium') resSeverity.style.color = 'var(--warning-color)';
+            else resSeverity.style.color = 'var(--success-color)';
+
+            // Confidence format
+            const conf = data.confidence || 0.85; // Fallback
+            document.getElementById('resConfidence').textContent = `${(conf * 100).toFixed(0)}%`;
+
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('resultContent').style.display = 'block';
+
+        } catch (e) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}
