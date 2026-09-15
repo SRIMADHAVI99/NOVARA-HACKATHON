@@ -57,6 +57,7 @@ def cv_damage_detection(image_path):
     - Dark Cavity / Contour Analysis for Potholes
     - Canny Edge Density & Sobel Gradient Magnitude for Cracks
     - Pixel Brightness & Texture Variation Analysis for Undamaged Roads
+    - Feature Quality Check for low-information / blank / extreme luminance images
     """
     try:
         img = cv2.imread(image_path)
@@ -74,10 +75,18 @@ def cv_damage_detection(image_path):
         gray = cv2.cvtColor(img_resized, cv2.COLOR_BGR2GRAY)
         total_pixels = 400 * 400
         mean_val = float(np.mean(gray))
+        std_dev = float(np.std(gray))
 
-        # 1. Dark Cavity Blob Analysis (Potholes produce pit shadows)
-        dark_threshold = max(35.0, mean_val * 0.65)
-        dark_mask = (gray < dark_threshold).astype(np.uint8) * 255
+        # Check for uninformative / featureless / blank / extreme luminance images
+        is_low_info = (std_dev < 4.0) or (mean_val > 245.0) or (mean_val < 15.0)
+
+        # 1. Dark Cavity Blob Analysis (Potholes produce pit shadows relative to surface brightness)
+        if mean_val < 15.0 or mean_val > 245.0:
+            dark_threshold = 0.0
+        else:
+            dark_threshold = max(35.0, mean_val * 0.65)
+
+        dark_mask = (gray < dark_threshold).astype(np.uint8) * 255 if dark_threshold > 0 else np.zeros((400, 400), dtype=np.uint8)
         dark_pixel_ratio = float(np.count_nonzero(dark_mask) / total_pixels)
 
         contours, _ = cv2.findContours(dark_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -116,7 +125,11 @@ def cv_damage_detection(image_path):
         else:
             damage_type = 'No Damage'
             severity = 'None'
-            confidence = min(0.98, max(0.82, 0.95 - (edge_density + gradient_ratio) * 2.0))
+            if is_low_info:
+                # Low visual detail / featureless blank / overexposed image gets moderate detection confidence
+                confidence = 0.65
+            else:
+                confidence = min(0.98, max(0.82, 0.95 - (edge_density + gradient_ratio) * 2.0))
 
         return {
             'status': 'success',

@@ -49,7 +49,17 @@ class InfraScanAITestSuite(unittest.TestCase):
         small_road = np.full((50, 50, 3), 120, dtype=np.uint8)
         cv2.imwrite(cls.small_img_path, small_road)
 
-        # 5. Corrupt File Fixture
+        # 5. Blank White Image Fixture
+        cls.blank_white_path = os.path.join(cls.fixtures_dir, 'blank_white.jpg')
+        blank_white = np.full((400, 400, 3), 255, dtype=np.uint8)
+        cv2.imwrite(cls.blank_white_path, blank_white)
+
+        # 6. Pitch Black Image Fixture
+        cls.pitch_black_path = os.path.join(cls.fixtures_dir, 'pitch_black.jpg')
+        pitch_black = np.full((400, 400, 3), 5, dtype=np.uint8)
+        cv2.imwrite(cls.pitch_black_path, pitch_black)
+
+        # 7. Corrupt File Fixture
         cls.corrupt_img_path = os.path.join(cls.fixtures_dir, 'corrupt.jpg')
         with open(cls.corrupt_img_path, 'wb') as f:
             f.write(b"not an image file content")
@@ -66,19 +76,33 @@ class InfraScanAITestSuite(unittest.TestCase):
         self.assertEqual(res['status'], 'success')
         self.assertEqual(res['damage_type'], 'No Damage')
         self.assertEqual(res['severity'], 'None')
-        self.assertGreater(res['confidence'], 0.70)
+        self.assertGreaterEqual(res['confidence'], 0.80)
 
     def test_cv_engine_pothole(self):
         res = cv_damage_detection(self.pothole_img_path)
         self.assertEqual(res['status'], 'success')
         self.assertEqual(res['damage_type'], 'Pothole')
         self.assertIn(res['severity'], ['Medium', 'High'])
-        self.assertGreater(res['confidence'], 0.75)
+        self.assertGreaterEqual(res['confidence'], 0.75)
 
     def test_cv_engine_crack(self):
         res = cv_damage_detection(self.crack_img_path)
         self.assertEqual(res['status'], 'success')
         self.assertIn(res['damage_type'], ['Crack', 'Pothole'])
+
+    def test_cv_engine_blank_white(self):
+        res = cv_damage_detection(self.blank_white_path)
+        self.assertEqual(res['status'], 'success')
+        self.assertEqual(res['damage_type'], 'No Damage')
+        self.assertEqual(res['severity'], 'None')
+        self.assertEqual(res['confidence'], 0.65)
+
+    def test_cv_engine_pitch_black(self):
+        res = cv_damage_detection(self.pitch_black_path)
+        self.assertEqual(res['status'], 'success')
+        self.assertEqual(res['damage_type'], 'No Damage')
+        self.assertEqual(res['severity'], 'None')
+        self.assertEqual(res['confidence'], 0.65)
 
     def test_cv_engine_small_image(self):
         res = cv_damage_detection(self.small_img_path)
