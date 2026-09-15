@@ -71,7 +71,7 @@
                     <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">ID / Image</th>
                     <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Reporter Info</th>
                     <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Damage & Severity</th>
-                    <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">AI Notes</th>
+                    <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">CV Details & Notes</th>
                     <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Status</th>
                     <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Actions</th>
                 </tr>
@@ -88,7 +88,16 @@
 {% block scripts %}
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Placeholder Google Maps API (In real world, provide valid key) -->
-<script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_MOCK_API_KEY&libraries=visualization"></script>
+{% if google_maps_api_key %}
+<script async src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=visualization"></script>
+{% endif %}
+<script>
+window.gm_authFailure = function() {
+    console.warn("Google Maps API Key invalid or expired. Activating Leaflet Map Fallback.");
+    if (typeof initFallbackMap === 'function') {
+        initFallbackMap();
+    }
+};
+</script>
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {% endblock %}

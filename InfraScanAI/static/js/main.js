@@ -87,11 +87,35 @@ function resetImage() {
 }
 
 // Geolocation
-function getLocation() {
+function setCoords(lat, lon, label, isFallback = false) {
     const latInput = document.getElementById('latitude');
     const lonInput = document.getElementById('longitude');
     const locationText = document.getElementById('locationText');
     const coordsText = document.getElementById('coordsText');
+    const btn = document.getElementById('locationBtn');
+
+    latInput.value = lat;
+    lonInput.value = lon;
+    coordsText.textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+    locationText.textContent = label || "GPS Location Captured";
+
+    if (isFallback) {
+        btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Demo Location';
+        btn.className = 'btn btn-outline';
+        btn.style.borderColor = 'var(--warning-color)';
+        btn.style.color = 'var(--warning-color)';
+        btn.style.background = '#fef3c7';
+    } else {
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> GPS Detected';
+        btn.className = 'btn btn-primary';
+        btn.style.background = 'var(--success-color)';
+        btn.style.borderColor = 'var(--success-color)';
+        btn.style.color = 'white';
+    }
+    btn.disabled = false;
+}
+
+function getLocation() {
     const btn = document.getElementById('locationBtn');
 
     if (navigator.geolocation) {
@@ -102,39 +126,28 @@ function getLocation() {
             async (position) => {
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
-                latInput.value = lat;
-                lonInput.value = lon;
-                coordsText.textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+                let addressLabel = "Live GPS Location Captured";
 
                 try {
-                    // Reverse geocoding using Nominatim
                     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
                     const data = await response.json();
-                    
                     if (data && data.display_name) {
-                        locationText.textContent = data.display_name.split(',').slice(0, 3).join(',');
-                    } else {
-                        locationText.textContent = "Location Founded";
+                        addressLabel = data.display_name.split(',').slice(0, 3).join(',');
                     }
                 } catch (err) {
                     console.error("Reverse geocoding failed:", err);
-                    locationText.textContent = "Location Founded";
                 }
 
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Detected';
-                btn.classList.replace('btn-outline', 'btn-primary');
-                btn.style.background = 'var(--success-color)';
-                btn.style.borderColor = 'var(--success-color)';
-                btn.style.color = 'white';
+                setCoords(lat, lon, addressLabel, false);
             },
             (error) => {
-                alert("Error getting location. Please allow location access or try again.");
-                btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Detect Location';
-                btn.disabled = false;
-            }
+                console.warn("GPS Geolocation unavailable. Applying explicit demo fallback coordinates.", error);
+                setCoords(37.7749, -122.4194, "Fallback location — GPS unavailable", true);
+            },
+            { timeout: 5000 }
         );
     } else {
-        alert("Geolocation is not supported by this browser.");
+        setCoords(37.7749, -122.4194, "Fallback location — GPS unavailable", true);
     }
 }
 

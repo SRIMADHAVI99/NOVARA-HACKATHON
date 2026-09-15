@@ -1,7 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timezone
 
 db = SQLAlchemy()
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -14,9 +17,9 @@ class Report(db.Model):
     longitude = db.Column(db.Float, nullable=False)
     damage_type = db.Column(db.String(50), nullable=True) # Pothole, Crack, No Damage
     severity = db.Column(db.String(50), nullable=True) # Low, Medium, High
-    confidence = db.Column(db.Float, nullable=True) # AI Confidence
+    confidence = db.Column(db.Float, nullable=True) # Detection Confidence
     notes = db.Column(db.Text, nullable=True) # Citizen notes
-    report_time = db.Column(db.DateTime, default=datetime.utcnow)
+    report_time = db.Column(db.DateTime, default=utc_now)
     status = db.Column(db.String(50), default='Pending') # Pending, Repaired
 
     def to_dict(self):

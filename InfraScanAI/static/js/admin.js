@@ -26,12 +26,16 @@ function updateDashboard() {
     updateTable();
     updateChart();
     
-    // We try to init map if google maps is loaded
-    if (typeof google === 'object' && typeof google.maps === 'object') {
-        initMap();
+    // Check if Google Maps API loaded successfully
+    if (typeof google === 'object' && typeof google.maps === 'object' && typeof google.maps.Map === 'function') {
+        try {
+            initMap();
+        } catch (err) {
+            console.warn("Google Maps init failed, falling back to Leaflet:", err);
+            initFallbackMap();
+        }
     } else {
-        document.getElementById('mapOverlay').style.display = 'flex';
-        document.getElementById('mapOverlay').innerHTML = '<p>Map API Key Required for Live Maps. Mock Data Below</p>';
+        initFallbackMap();
     }
 }
 
@@ -243,4 +247,69 @@ function initMap() {
             });
         }
     });
+}
+
+let leafletMapInstance = null;
+
+function initFallbackMap() {
+    const mapElement = document.getElementById('map');
+    if (!mapElement) return;
+
+    // Hide overlay
+    const overlay = document.getElementById('mapOverlay');
+    if (overlay) overlay.style.display = 'none';
+
+    if (typeof L === 'undefined') {
+        mapElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: #64748b;">Map view offline.</div>';
+        return;
+    }
+
+    if (leafletMapInstance) {
+        leafletMapInstance.remove();
+        leafletMapInstance = null;
+    }
+
+    let defaultCenter = [37.7749, -122.4194];
+    if (reportsData.length > 0 && reportsData[0].latitude && reportsData[0].longitude) {
+        defaultCenter = [reportsData[0].latitude, reportsData[0].longitude];
+    }
+
+    leafletMapInstance = L.map('map').setView(defaultCenter, 11);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(leafletMapInstance);
+
+    const markersGroup = L.featureGroup();
+
+    reportsData.forEach(r => {
+        if (r.latitude && r.longitude) {
+            const statusClass = r.status === 'Pending' ? 'badge-warning' : (r.status === 'Under Review' ? 'badge-primary' : 'badge-success');
+            const sevColor = r.severity === 'High' ? '#ef4444' : (r.severity === 'Medium' ? '#f59e0b' : '#059669');
+
+            const popupContent = `
+                <div style="font-family: system-ui, sans-serif; min-width: 180px; padding: 4px;">
+                    <div style="font-weight: 700; font-size: 1rem; color: #1e293b;">${r.damage_type}</div>
+                    <div style="font-size: 0.85rem; color: ${sevColor}; font-weight: 600; margin-bottom: 4px;">Severity: ${r.severity}</div>
+                    <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 6px;">Reported by: ${r.name}</div>
+                    <span class="badge ${statusClass}" style="font-size: 0.75rem; padding: 2px 8px;">${r.status}</span>
+                    ${r.image_path ? `<div style="margin-top: 6px;"><img src="/static/uploads/${r.image_path}" style="width: 100%; height: 70px; object-fit: cover; border-radius: 4px;"></div>` : ''}
+                </div>
+            `;
+
+            const marker = L.marker([r.latitude, r.longitude]).bindPopup(popupContent);
+            marker.addTo(markersGroup);
+        }
+    });
+
+    markersGroup.addTo(leafletMapInstance);
+
+    if (reportsData.length > 0) {
+        try {
+            leafletMapInstance.fitBounds(markersGroup.getBounds().pad(0.2));
+        } catch (e) {
+            // Ignore if single point
+        }
+    }
 }

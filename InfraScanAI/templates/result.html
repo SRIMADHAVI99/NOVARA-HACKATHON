@@ -20,11 +20,11 @@
             </div>
             
             <div style="position: relative; z-index: 1;">
-                <h3 style="color: var(--primary-color); margin-bottom: 1rem;"><i class="fa-solid fa-robot" style="margin-right: 8px;"></i> AI Insights</h3>
+                <h3 style="color: var(--primary-color); margin-bottom: 1rem;"><i class="fa-solid fa-microchip" style="margin-right: 8px;"></i> Computer Vision Insights</h3>
                 
                 <p id="aiExplanation" style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 1.5rem; line-height: 1.6;"></p>
                 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
                     <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
                         <span class="text-muted"><i class="fa-solid fa-triangle-exclamation" style="margin-right: 5px;"></i> Damage Type</span>
                         <strong id="resDamageType" style="font-size: 1.1rem;"></strong>
@@ -34,8 +34,19 @@
                         <strong id="resSeverity" style="font-size: 1.1rem;"></strong>
                     </div>
                     <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
-                        <span class="text-muted"><i class="fa-solid fa-chart-pie" style="margin-right: 5px;"></i> AI Confidence</span>
+                        <span class="text-muted"><i class="fa-solid fa-chart-pie" style="margin-right: 5px;"></i> Detection Confidence</span>
                         <strong id="resConfidence" style="font-size: 1.1rem; color: var(--primary-color);"></strong>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+                        <span class="text-muted"><i class="fa-solid fa-location-dot" style="margin-right: 5px;"></i> Location</span>
+                        <strong id="resLocation" style="font-size: 0.95rem; color: var(--text-main);"></strong>
+                    </div>
+                    <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+                        <span class="text-muted"><i class="fa-solid fa-clock" style="margin-right: 5px;"></i> Report Status</span>
+                        <span id="resStatusBadge" class="badge"></span>
                     </div>
                 </div>
             </div>
@@ -43,6 +54,9 @@
 
         <!-- Actions -->
         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a id="downloadCertBtn" href="#" class="btn btn-outline" style="font-size: 1.1rem; border-color: var(--success-color); color: var(--success-color);">
+                <i class="fa-solid fa-file-pdf" style="margin-right: 8px;"></i> Download Certificate
+            </a>
             <a href="/report" class="btn btn-outline" style="font-size: 1.1rem;">
                 <i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Report Another Damage
             </a>
@@ -99,8 +113,22 @@
             else resSeverity.style.color = 'var(--success-color)';
 
             // Confidence format
-            const conf = data.confidence || 0.85; // Fallback
+            const conf = data.confidence || 0.85;
             document.getElementById('resConfidence').textContent = `${(conf * 100).toFixed(0)}%`;
+
+            // Location coordinates
+            document.getElementById('resLocation').textContent = `${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`;
+
+            // Status badge
+            const statusBadge = document.getElementById('resStatusBadge');
+            statusBadge.textContent = data.status;
+            statusBadge.className = `badge ${data.status === 'Pending' ? 'badge-warning' : (data.status === 'Under Review' ? 'badge-primary' : 'badge-success')}`;
+
+            // Certificate download button
+            const certBtn = document.getElementById('downloadCertBtn');
+            if (certBtn) {
+                certBtn.href = `/api/certificate/${data.report_id}`;
+            }
 
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('resultContent').style.display = 'block';
