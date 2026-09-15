@@ -94,27 +94,17 @@
             const data = await response.json();
             
             document.getElementById('resultImage').src = `/static/uploads/${data.image_path}`;
-            document.getElementById('resDamageType').textContent = data.damage_type;
-            
-            // Generate a natural language explanation
-            const damageMap = {
-                'Pothole': 'a pothole on the road surface that may cause vehicle damage and traffic hazards.',
-                'Crack': 'cracking on the road surface indicating structural wear and potential future degradation.',
-                'No Damage': 'no significant structural damage or hazards on this section of the road.'
-            };
-            const explanationBase = damageMap[data.damage_type] || 'unidentified road anomalies requiring further human inspection.';
-            document.getElementById('aiExplanation').innerHTML = `The uploaded image shows <strong>${explanationBase}</strong>`;
-
-            // Severity styling
+            // Damage Type and Severity
+            document.getElementById('resDamageType').textContent = data.damage_type || 'N/A';
             const resSeverity = document.getElementById('resSeverity');
-            resSeverity.textContent = data.severity;
+            resSeverity.textContent = data.severity || 'N/A';
             if (data.severity === 'High') resSeverity.style.color = 'var(--danger-color)';
             else if (data.severity === 'Medium') resSeverity.style.color = 'var(--warning-color)';
             else resSeverity.style.color = 'var(--success-color)';
 
             // Confidence format
-            const conf = data.confidence || 0.85;
-            document.getElementById('resConfidence').textContent = `${(conf * 100).toFixed(0)}%`;
+            const conf = data.confidence;
+            document.getElementById('resConfidence').textContent = (conf !== null && conf !== undefined) ? `${(conf * 100).toFixed(0)}%` : 'N/A';
 
             // Location coordinates
             document.getElementById('resLocation').textContent = `${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`;

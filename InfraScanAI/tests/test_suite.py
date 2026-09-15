@@ -111,7 +111,24 @@ class InfraScanAITestSuite(unittest.TestCase):
     def test_cv_engine_corrupt_file(self):
         res = cv_damage_detection(self.corrupt_img_path)
         self.assertEqual(res['status'], 'error')
+        self.assertIsNone(res['damage_type'])
+        self.assertIsNone(res['severity'])
+        self.assertIsNone(res['confidence'])
         self.assertIn('Could not decode', res['message'])
+
+    def test_api_corrupt_image_upload_rejected(self):
+        data = {
+            'name': 'Corrupt Tester',
+            'email': 'corrupt@example.com',
+            'latitude': '37.7749',
+            'longitude': '-122.4194',
+            'image': (io.BytesIO(b"corrupt image payload bytes"), "corrupt.jpg")
+        }
+        res = self.client.post('/api/report', data=data, content_type='multipart/form-data')
+        self.assertEqual(res.status_code, 400)
+        json_resp = res.get_json()
+        self.assertIn('error', json_resp)
+        self.assertIn('corrupted or not a valid image', json_resp['error'])
 
     def test_api_invalid_extension(self):
         data = {

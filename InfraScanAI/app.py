@@ -64,9 +64,9 @@ def cv_damage_detection(image_path):
         if img is None:
             return {
                 'status': 'error',
-                'damage_type': 'No Damage',
-                'severity': 'None',
-                'confidence': 0.50,
+                'damage_type': None,
+                'severity': None,
+                'confidence': None,
                 'message': 'Could not decode image file.'
             }
 
@@ -142,9 +142,9 @@ def cv_damage_detection(image_path):
     except Exception as e:
         return {
             'status': 'error',
-            'damage_type': 'No Damage',
-            'severity': 'None',
-            'confidence': 0.50,
+            'damage_type': None,
+            'severity': None,
+            'confidence': None,
             'message': f'CV processing exception: {str(e)}'
         }
 
