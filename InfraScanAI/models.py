@@ -22,6 +22,37 @@ class Report(db.Model):
     report_time = db.Column(db.DateTime, default=utc_now)
     status = db.Column(db.String(50), default='Pending') # Pending, Repaired
 
+    def __init__(
+        self,
+        report_id: str,
+        name: str,
+        email: str,
+        image_path: str,
+        latitude: float,
+        longitude: float,
+        phone: str | None = None,
+        damage_type: str | None = None,
+        severity: str | None = None,
+        confidence: float | None = None,
+        notes: str | None = None,
+        status: str = 'Pending',
+        report_time: datetime | None = None
+    ):
+        self.report_id = report_id
+        self.name = name
+        self.email = email
+        self.phone = phone
+        self.image_path = image_path
+        self.latitude = latitude
+        self.longitude = longitude
+        self.damage_type = damage_type
+        self.severity = severity
+        self.confidence = confidence
+        self.notes = notes
+        self.status = status
+        if report_time:
+            self.report_time = report_time
+
     def to_dict(self):
         return {
             'id': self.id,

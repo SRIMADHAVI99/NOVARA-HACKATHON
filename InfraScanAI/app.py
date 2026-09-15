@@ -214,7 +214,7 @@ def submit_report():
         return jsonify({'error': 'Missing required fields'}), 400
 
     # Save image securely
-    safe_name = secure_filename(image.filename)
+    safe_name = secure_filename(image.filename or "")
     filename = f"{uuid.uuid4().hex}_{safe_name}"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     image.save(filepath)
@@ -267,7 +267,7 @@ def standalone_detect():
     if 'image' not in request.files:
         return jsonify({'error': 'No image provided'}), 400
     image = request.files['image']
-    if image.filename == '' or not allowed_file(image.filename):
+    if not image.filename or not allowed_file(image.filename):
         return jsonify({'error': 'Invalid image file'}), 400
     
     safe_name = secure_filename(image.filename)
@@ -286,7 +286,7 @@ def get_reports():
     query = Report.query
     if email:
         query = query.filter_by(email=email)
-    reports = query.order_by(Report.report_time.desc()).all()
+    reports = query.order_by(db.desc(Report.report_time)).all()
     return jsonify([r.to_dict() for r in reports])
 
 @app.route('/api/reports/<int:id>/status', methods=['PUT'])
@@ -294,7 +294,7 @@ def update_status(id):
     report = db.session.get(Report, id)
     if not report:
         return jsonify({'error': 'Report not found'}), 404
-    data = request.json
+    data = request.get_json(silent=True) or {}
     if 'status' in data:
         report.status = data['status']
         db.session.commit()
